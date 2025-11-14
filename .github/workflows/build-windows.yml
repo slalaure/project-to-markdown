@@ -25,21 +25,21 @@ jobs:
 
       - name: Build Windows portable app
         run: |
-          # This creates the portable bundle in 'dist/Project To Markdown'
+          # This creates the portable bundle in 'build/Project To Markdown'
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
       - name: Create portable ZIP archive
         run: |
-          # Rename the correct output folder 'dist/Project To Markdown'
-          Rename-Item -Path "dist\Project To Markdown" -NewName "Project-To-Markdown-Portable"
+          # Rename the correct output folder 'build/Project To Markdown'
+          Rename-Item -Path "build\Project To Markdown" -NewName "Project-To-Markdown-Portable"
           # Create a zip file from this renamed folder
-          Compress-Archive -Path "dist\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
+          Compress-Archive -Path "build\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
         shell: pwsh
 
       - name: Upload artifact (Windows Portable)
         uses: actions/upload-artifact@v4
         with:
-          name: project-to-markdown-windows-portable-zip
+          name: windows-portable-zip
           path: dist\Project-To-Markdown-Portable.zip
 
   build-macos-arm64:
@@ -66,6 +66,12 @@ jobs:
           # This creates the app bundle at 'dist/Project To Markdown.app'
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
+      - name: Sign macOS app (ad-hoc)
+        run: |
+          # This ad-hoc signature can help with Gatekeeper issues
+          codesign --force --deep --sign - "dist/Project To Markdown.app"
+        shell: bash
+
       - name: Create portable ZIP archive (macOS)
         run: |
           # We zip the .app bundle for portable distribution
@@ -76,5 +82,5 @@ jobs:
       - name: Upload artifact (macOS Portable)
         uses: actions/upload-artifact@v4
         with:
-          name: project-to-markdown-macos-arm64-portable-zip
+          name: macos-arm64-portable-zip
           path: dist/Project-To-Markdown-macOS-arm64.zip
