@@ -1,4 +1,4 @@
-name: Build Windows Installer
+name: Build Installers
 
 on:
   workflow_dispatch: # Allows manual triggering
@@ -20,17 +20,55 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install flet
-          pip install pyinstaller  # <-- AJOUT DE CETTE LIGNE
+          pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build Windows installer
+      - name: Build Windows bundle
         run: |
-          # We pack main.py, set a product name and version,
-          # and critically, we bundle the 'assets' directory and the 'config.json'
+          # We run flet pack, which bundles the app into build/main
+          # and also creates an MSI in dist/
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
-      - name: Upload artifact
+      - name: Create portable ZIP archive
+        run: |
+          # Rename the PyInstaller output folder for clarity
+          Rename-Item -Path "build\main" -NewName "Project-To-Markdown-Portable"
+          # Create a zip file from this renamed folder
+          Compress-Archive -Path "build\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
+        shell: pwsh
+
+      - name: Upload artifact (Windows Portable)
         uses: actions/upload-artifact@v4
         with:
-          name: project-to-markdown-msi
-          path: dist
+          name: project-to-markdown-winx64-portable-zip
+          path: dist\Project-To-Markdown-Portable.zip
+
+  build-macos-arm64:
+    runs-on: macos-14 # This runner is Apple Silicon (arm64)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install flet
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build macOS installer
+        run: |
+          # The command is identical, Flet handles the platform difference
+          flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
+
+      - name: Upload artifact (macOS)
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-to-markdown-macos-arm64-installer-dmg
+          path: dist/Project To Markdown.dmg # Flet creates a .dmg with this name
