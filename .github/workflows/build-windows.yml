@@ -23,24 +23,23 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build Windows bundle
+      - name: Build Windows portable app
         run: |
-          # We run flet pack, which bundles the app into build/main
-          # and also creates an MSI in dist/
+          # This creates the portable bundle in 'dist/Project To Markdown'
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
       - name: Create portable ZIP archive
         run: |
-          # Rename the PyInstaller output folder for clarity
-          Rename-Item -Path "build\main" -NewName "Project-To-Markdown-Portable"
+          # Rename the correct output folder 'dist/Project To Markdown'
+          Rename-Item -Path "dist\Project To Markdown" -NewName "Project-To-Markdown-Portable"
           # Create a zip file from this renamed folder
-          Compress-Archive -Path "build\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
+          Compress-Archive -Path "dist\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
         shell: pwsh
 
       - name: Upload artifact (Windows Portable)
         uses: actions/upload-artifact@v4
         with:
-          name: project-to-markdown-winx64-portable-zip
+          name: project-to-markdown-windows-portable-zip
           path: dist\Project-To-Markdown-Portable.zip
 
   build-macos-arm64:
@@ -62,13 +61,20 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build macOS installer
+      - name: Build macOS portable app
         run: |
-          # The command is identical, Flet handles the platform difference
+          # This creates the app bundle at 'dist/Project To Markdown.app'
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
-      - name: Upload artifact (macOS)
+      - name: Create portable ZIP archive (macOS)
+        run: |
+          # We zip the .app bundle for portable distribution
+          cd dist
+          zip -r "Project-To-Markdown-macOS-arm64.zip" "Project To Markdown.app"
+        shell: bash
+
+      - name: Upload artifact (macOS Portable)
         uses: actions/upload-artifact@v4
         with:
-          name: project-to-markdown-macos-arm64-installer-dmg
-          path: dist/Project To Markdown.dmg # Flet creates a .dmg with this name
+          name: project-to-markdown-macos-arm64-portable-zip
+          path: dist/Project-To-Markdown-macOS-arm64.zip
