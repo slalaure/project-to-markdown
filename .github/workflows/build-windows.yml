@@ -23,24 +23,16 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build Windows portable app
+      - name: Build Windows installer
         run: |
-          # This creates the portable bundle in 'build/Project To Markdown'
+          # This creates the MSI installer in 'dist/Project To Markdown.msi'
           flet pack main.py --name "Project To Markdown" --product-version 1.0.0 --add-data "assets:assets" --add-data "config.json:."
 
-      - name: Create portable ZIP archive
-        run: |
-          # Rename the correct output folder 'build/Project To Markdown'
-          Rename-Item -Path "build\Project To Markdown" -NewName "Project-To-Markdown-Portable"
-          # Create a zip file from this renamed folder
-          Compress-Archive -Path "build\Project-To-Markdown-Portable" -DestinationPath "dist\Project-To-Markdown-Portable.zip"
-        shell: pwsh
-
-      - name: Upload artifact (Windows Portable)
+      - name: Upload artifact (Windows MSI)
         uses: actions/upload-artifact@v4
         with:
-          name: windows-portable-zip
-          path: dist\Project-To-Markdown-Portable.zip
+          name: windows-installer-msi
+          path: dist/Project To Markdown.msi
 
   build-macos-arm64:
     runs-on: macos-14 # This runner is Apple Silicon (arm64)
